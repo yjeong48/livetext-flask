@@ -12,7 +12,7 @@ from msrest.authentication import CognitiveServicesCredentials
 import sys
 import requests, uuid, json
 
-UPLOAD_FOLDER = '/Users/yoonsungjeong/personalproject/pythonProject/flask-server/images' 
+UPLOAD_FOLDER = '/images' 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif']) 
 
 app = Flask(__name__)
