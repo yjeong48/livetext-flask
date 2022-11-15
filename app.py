@@ -110,9 +110,9 @@ def check_server():
 def my_translator():
     image_path = ""
     # check if the post request has the file part 
-    if 'file' not in request.files: 
+    if 'file' in request.files: 
         print("file not in request")
-        return flask.Response("Request does not contain image file.", headers={"Content-Type":"text/html"})
+        return flask.Response("Request contains image file.", headers={"Content-Type":"text/html"})
     
     file = request.files['file'] 
     if file and allowed_file(file.filename): 
