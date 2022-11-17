@@ -4,7 +4,7 @@ from flask.helpers import send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename 
 from dotenv import load_dotenv
-import os
+import os, io
 import time
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes, VisualFeatureTypes
@@ -12,28 +12,24 @@ from msrest.authentication import CognitiveServicesCredentials
 import sys
 import requests, uuid, json
 
-UPLOAD_FOLDER = '/images' 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif']) 
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg']) 
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER 
 cors = CORS(app)
 load_dotenv()
 subscription_key = os.getenv('COG_SERVICE_KEY')
 location = os.getenv('COG_SERVICE_REGION')
 
-def get_text(image_path, computervision_client):
-    #read image from saved folder
-    read_image = open(image_path, "rb")
+def get_text(image, computervision_client):
 
     # Call API with image and raw response (allows you to get the operation location)
-    read_response = computervision_client.read_in_stream(read_image, raw=True)
+    read_response = computervision_client.read_in_stream(image, raw=True)
     # Get the operation location (URL with ID as last appendage)
     read_operation_location = read_response.headers["Operation-Location"]
     # Take the ID off and use to get results
     operation_id = read_operation_location.split("/")[-1]
 
-    read_image.close()
+    image.close()
 
     #t1 = time.time()
     # Call the "GET" API and wait for it to retrieve the results 
@@ -110,15 +106,14 @@ def check_server():
 def my_translator():
     image_path = ""
     # check if the post request has the file part 
-    if 'file' in request.files: 
+    if 'file' not in request.files: 
         print("file not in request")
-        return flask.Response("Request contains image file.", headers={"Content-Type":"text/html"})
+        return flask.Response("Request does not contain image file.", headers={"Content-Type":"text/html"})
     
     file = request.files['file'] 
     if file and allowed_file(file.filename): 
-        filename = secure_filename(file.filename) 
-        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(image_path) 
+        #read image file as bytes into file_like object
+        image = io.BytesIO(file.read())
 
         #Authenticate Computer Vision client
         endpoint = "https://livetext.cognitiveservices.azure.com/"
@@ -127,7 +122,7 @@ def my_translator():
         detect_constructed_url = trans_endpoint + '/detect'
         trans_constructed_url = trans_endpoint + '/translate'
         
-        text = get_text(image_path, computervision_client)
+        text = get_text(image, computervision_client)
         source_language = detect_language(text, subscription_key, location, detect_constructed_url)
         translated_text = translate(text, source_language, subscription_key, location, trans_constructed_url)
 
