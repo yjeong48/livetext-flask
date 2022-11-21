@@ -69,11 +69,11 @@ def detect_language(text, subscription_key, location, constructed_url):
     language = response[0]["language"]
     return language
 
-def translate(text, source_language, subscription_key, location, constructed_url):
+def translate(text, source_language, target_language, subscription_key, location, constructed_url):
     params = {
         'api-version': '3.0',
         'from': source_language,
-        'to': ['ko']
+        'to': target_language
     }
 
     headers = {
@@ -111,6 +111,11 @@ def my_translator():
         return flask.Response("Request does not contain image file.", headers={"Content-Type":"text/html"})
     
     file = request.files['file'] 
+    target_language  = request.form.get("target_lang")
+    #default is english
+    if target_language == "":
+        target_language = "en"
+
     if file and allowed_file(file.filename): 
         #read image file as bytes into file_like object
         image = io.BytesIO(file.read())
@@ -124,7 +129,7 @@ def my_translator():
         
         text = get_text(image, computervision_client)
         source_language = detect_language(text, subscription_key, location, detect_constructed_url)
-        translated_text = translate(text, source_language, subscription_key, location, trans_constructed_url)
+        translated_text = translate(text, source_language, target_language, subscription_key, location, trans_constructed_url)
 
         return flask.Response(translated_text, headers={"Content-Type":"text/html"})
 
