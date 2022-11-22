@@ -111,7 +111,7 @@ def my_translator():
         return flask.Response("Request does not contain image file.", headers={"Content-Type":"text/html"})
     
     file = request.files['file'] 
-    target_language  = request.form.get("target_lang")
+    target_language  = request.form.get("targetLang")
     #default is english
     if target_language == "":
         target_language = "en"
@@ -135,7 +135,7 @@ def my_translator():
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", debug=True, threaded=True)
+    app.run(debug=True, threaded=True)
 
  
  
