@@ -12,7 +12,7 @@ from msrest.authentication import CognitiveServicesCredentials
 import sys
 import requests, uuid, json
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg']) 
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']) 
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -22,17 +22,15 @@ location = os.getenv('COG_SERVICE_REGION')
 
 def get_text(image, computervision_client):
 
-    # Call API with image and raw response (allows you to get the operation location)
+    # Call API with image and raw response
     read_response = computervision_client.read_in_stream(image, raw=True)
-    # Get the operation location (URL with ID as last appendage)
+    # Get the operation location
     read_operation_location = read_response.headers["Operation-Location"]
-    # Take the ID off and use to get results
     operation_id = read_operation_location.split("/")[-1]
 
     image.close()
 
     #t1 = time.time()
-    # Call the "GET" API and wait for it to retrieve the results 
     i=0
     while True:
         i+=1
@@ -43,7 +41,6 @@ def get_text(image, computervision_client):
     #t2 = time.time()
     #print("time taken: ", t2-t1)
 
-    # Print the detected text, line by line
     if read_result.status == OperationStatusCodes.succeeded:
         text = ""
         for text_result in read_result.analyze_result.read_results:
@@ -63,7 +60,7 @@ def detect_language(text, subscription_key, location, constructed_url):
     body = [{
         "text": text
     }]
-    # Send the request and get response
+    
     request = requests.post(constructed_url, params=params, headers=headers, json=body)
     response = request.json()
     language = response[0]["language"]
@@ -135,7 +132,7 @@ def my_translator():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True)
+    app.run(debug=False, threaded=True)
 
  
  
